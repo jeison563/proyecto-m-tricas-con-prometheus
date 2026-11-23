@@ -1,0 +1,59 @@
+#prometheus/alert_rules.yml
+groups:
+  - name: workflow-engine
+    rules:
+      - alert: ServicioCaido
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.job }} no responde"
+          description: "El target {{ $labels.instance }} lleva más de 1 minuto caído."
+
+      - alert: ApiErrores5xx
+        expr: |
+          sum(rate(http_requests_total{job="api", status="5xx"}[5m]))
+            /
+          sum(rate(http_requests_total{job="api"}[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Más del 5% de respuestas 5xx en la API"
+
+      - alert: ApiLenta
+        # Se usa el histograma "highr" (buckets hasta 60 s). El histograma normal de
+        # prometheus-fastapi-instrumentator solo llega a 1 s, así que nunca podía superar 2 s.
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_request_duration_highr_seconds_bucket{job="api"}[5m])) by (le)) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "p95 de la API supera 2 segundos"
+
+      - alert: ActivitiesFallando
+        expr: increase(temporal_activity_execution_failed_total{job="worker"}[10m]) > 10
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Muchas activities fallando en los últimos 10 minutos"
+
+      - alert: WorkflowsFallidos
+        expr: increase(temporal_workflow_failed_total{job="worker"}[10m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Hay workflows que terminaron en FAILED"
+
+      - alert: MonitorSinDatos
+        expr: time() - ultima_lectura_unix{job="worker-app"} > 60
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "El worker lleva más de 60 s sin registrar métricas"

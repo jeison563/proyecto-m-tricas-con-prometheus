@@ -1,0 +1,33 @@
+# alertmanager/alertmanager.yml
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: default
+  group_by: ["alertname", "job"]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  routes:
+    - matchers:
+        - severity="critical"
+      receiver: criticas
+      repeat_interval: 1h
+
+receivers:
+  - name: default
+    webhook_configs:
+      - url: "http://api:8000/alerts"
+
+  - name: criticas
+    webhook_configs:
+      - url: "http://api:8000/alerts"
+
+inhibit_rules:
+  - source_matchers:
+      - severity="critical"
+    target_matchers:
+      - severity="warning"
+    # Con ["alertname", "job"] la regla nunca se activaba: una alerta critical y una warning
+    # siempre tienen distinto alertname. Se inhibe por el mismo job.
+    equal: ["job"]

@@ -1,0 +1,63 @@
+/* Sin esto, reglas como ".auth { display: flex }" anulan el atributo hidden y se ven login y panel a la vez */
+[hidden] { display: none !important; }
+:root { --bg:#141b27; --panel:#1b2433; --borde:#2a3547; --txt:#e6eaf2; --mute:#8b97ab;
+        --azul:#3b6fd8; --verde:#3dbf9f; --ambar:#e0a030; --rojo:#e5484d; --celeste:#4a8df0; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Inter, system-ui, sans-serif; background: var(--bg); color: var(--txt); }
+.topbar { display: flex; justify-content: space-between; align-items: center; padding: 14px 28px; }
+.topbar h1 { font-size: 1.15rem; margin: 0; }
+.sub { color: var(--mute); font-size: .85rem; }
+.msg { min-height: 1.2em; margin: 6px 0 0; font-size: .85rem; color: var(--verde); }
+.msg.error { color: var(--rojo); }
+input, select, button { font: inherit; }
+input, select { background: var(--bg); color: var(--txt); border: 1px solid var(--borde); border-radius: 8px; padding: 11px 14px; width: 100%; }
+input:focus, select:focus { outline: 2px solid #3b6fd855; border-color: var(--azul); }
+.btn { background: var(--azul); color: #fff; border: 0; border-radius: 8px; padding: 12px 18px; cursor: pointer; font-weight: 600; }
+.btn:hover { filter: brightness(1.1); }
+.btn.ghost { background: transparent; border: 1px solid var(--borde); color: var(--txt); }
+a { color: #6b9bff; }
+
+/* ---- login / registro ---- */
+.auth { display: flex; justify-content: center; padding: 48px 16px; }
+.auth-box { width: min(500px, 100%); text-align: center; }
+.auth-box h2 { font-size: 1.7rem; margin: 0 0 6px; font-weight: 500; }
+.auth-box .sub { font-size: 1rem; margin: 0 0 26px; }
+.card { background: #222d3c; border-radius: 10px; padding: 36px; text-align: left; display: flex; flex-direction: column; gap: 18px; }
+.card label { display: flex; flex-direction: column; gap: 8px; font-size: .9rem; color: #c5cdda; }
+.enlace { font-size: .85rem; text-align: right; margin-top: -8px; }
+.pie { margin-top: 26px; font-size: .9rem; }
+
+/* ---- panel ---- */
+.dash { max-width: 1280px; margin: 0 auto; padding: 0 24px 40px; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin-bottom: 8px; }
+.toolbar label { display: flex; gap: 8px; align-items: center; color: var(--mute); }
+.toolbar select { width: auto; padding: 9px 12px; }
+.inline { display: flex; gap: 8px; margin-left: auto; }
+.inline input { width: 190px; padding: 9px 12px; }
+.inline .btn, .toolbar > .btn { padding: 9px 16px; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px; margin: 14px 0; }
+.kpi, .panel { background: var(--panel); border: 1px solid var(--borde); border-radius: 10px; }
+.kpi { padding: 18px 20px; display: flex; flex-direction: column; gap: 4px; }
+.k-label { font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--mute); }
+.kpi strong { font-size: 1.8rem; }
+.kpi small { color: var(--mute); font-size: .78rem; }
+.ok { color: var(--verde); } .aviso { color: var(--ambar); } .critico { color: var(--rojo); }
+.grid2 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 16px; }
+@media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } .inline { margin-left: 0; } }
+.panel { padding: 20px; margin-bottom: 0; }
+section.panel + section.panel, .grid2 + .panel { margin-top: 0; }
+.panel-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+.panel-head h3 { margin: 0 0 4px; font-size: .95rem; }
+.seg { display: flex; background: var(--bg); border-radius: 8px; padding: 3px; }
+.seg button { background: none; border: 0; color: var(--mute); padding: 5px 11px; border-radius: 6px; cursor: pointer; font-size: .8rem; }
+.seg button.activo { background: var(--borde); color: var(--txt); }
+.uso { display: flex; flex-direction: column; gap: 8px; }
+.fila-uso { display: flex; justify-content: space-between; font-size: .85rem; margin-top: 10px; }
+.fila-uso span:last-child { color: var(--mute); }
+.barra { height: 5px; background: #2a3547; border-radius: 3px; overflow: hidden; }
+.relleno { height: 100%; width: 0; border-radius: 3px; background: var(--verde); transition: width .4s; }
+.relleno.aviso { background: var(--ambar); } .relleno.critico { background: var(--rojo); }
+table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+th { color: var(--mute); font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; font-weight: 600; }
+th, td { padding: 10px 8px; border-bottom: 1px solid var(--borde); text-align: right; }
+th:first-child, td:first-child { text-align: left; }

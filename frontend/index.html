@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Salud del sistema</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>Salud del sistema</h1>
+    <button id="btn-salir" class="btn ghost" hidden>Salir</button>
+  </header>
+
+  <main id="vista-auth" class="auth">
+    <section id="vista-login" class="auth-box">
+      <h2>¡Bienvenido de nuevo!</h2>
+      <p class="sub">Inicia sesión en tu cuenta para continuar.</p>
+      <form id="form-login" class="card">
+        <label>Correo electrónico
+          <input id="login-email" type="email" placeholder="Introduce tu correo electrónico" required autocomplete="off"></label>
+        <label>Contraseña
+          <input id="login-password" type="password" placeholder="Introduce tu contraseña" required autocomplete="off"></label>
+        <a href="#" id="link-olvide" class="enlace">¿Olvidaste tu contraseña?</a>
+        <button type="submit" class="btn">Iniciar sesión</button>
+        <p id="msg-login" class="msg"></p>
+      </form>
+      <p class="pie">¿No tienes cuenta? <a href="#" id="ir-registro">Regístrate</a></p>
+    </section>
+
+    <section id="vista-registro" class="auth-box" hidden>
+      <h2>Comience</h2>
+      <p class="sub">Cree su cuenta para monitorear sus servidores.</p>
+      <form id="form-registro" class="card">
+        <label>Correo electrónico
+          <input id="reg-email" type="email" placeholder="Introduce tu correo electrónico" required autocomplete="off"></label>
+        <label>Contraseña
+          <input id="reg-password" type="password" placeholder="Mínimo 10 caracteres" minlength="10" required autocomplete="new-password"></label>
+        <label>Repetir contraseña
+          <input id="reg-password2" type="password" placeholder="Repite la contraseña" minlength="10" required autocomplete="new-password"></label>
+        <button type="submit" class="btn">Inscribirse</button>
+        <p id="msg-registro" class="msg"></p>
+      </form>
+      <p class="pie">¿Ya tienes una cuenta? <a href="#" id="ir-login-1">Inicia sesión</a></p>
+    </section>
+
+    <section id="vista-olvide" class="auth-box" hidden>
+      <h2>Recuperar contraseña</h2>
+      <p class="sub">Te enviaremos un enlace para crear una nueva.</p>
+      <form id="form-olvide" class="card">
+        <label>Correo electrónico
+          <input id="olv-email" type="email" placeholder="Introduce tu correo electrónico" required></label>
+        <button type="submit" class="btn">Enviar enlace</button>
+        <p id="msg-olvide" class="msg"></p>
+      </form>
+      <p class="pie"><a href="#" id="ir-login-2">Volver a iniciar sesión</a></p>
+    </section>
+  </main>
+
+  <main id="vista-app" class="dash" hidden>
+    <div class="toolbar">
+      <label>Servidor <select id="sel-host"></select></label>
+      <form id="form-host" class="inline">
+        <input id="nuevo-host" type="text" placeholder="Nuevo servidor" maxlength="100" required>
+        <button type="submit" class="btn ghost">Agregar</button>
+      </form>
+      <button id="btn-iniciar" class="btn">Iniciar monitoreo</button>
+    </div>
+    <p id="msg-app" class="msg"></p>
+
+    <div class="kpis">
+      <div class="kpi"><span class="k-label">CPU</span><strong id="kpi-cpu">--</strong><small>uso actual</small></div>
+      <div class="kpi"><span class="k-label">Memoria</span><strong id="kpi-mem">--</strong><small id="sub-mem">uso actual</small></div>
+      <div class="kpi"><span class="k-label">Disco</span><strong id="kpi-disk">--</strong><small id="sub-disk">uso actual</small></div>
+      <div class="kpi"><span class="k-label">Última lectura</span><strong id="kpi-lectura">--</strong><small id="sub-lectura">sin datos</small></div>
+    </div>
+
+    <div class="grid2">
+      <section class="panel">
+        <div class="panel-head">
+          <div><h3>Consumo de recursos</h3><span class="sub">CPU, memoria y disco del servidor</span></div>
+          <div class="seg" id="rangos">
+            <button data-min="15">15 min</button>
+            <button data-min="60" class="activo">1 h</button>
+            <button data-min="360">6 h</button>
+            <button data-min="1440">24 h</button>
+          </div>
+        </div>
+        <canvas id="grafico" height="150"></canvas>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><h3>Uso de recursos</h3></div>
+        <div class="uso">
+          <div class="fila-uso"><span>CPU</span><span id="val-cpu">--</span></div><div class="barra"><div id="bar-cpu" class="relleno"></div></div>
+          <div class="fila-uso"><span>Memoria</span><span id="val-mem">--</span></div><div class="barra"><div id="bar-mem" class="relleno"></div></div>
+          <div class="fila-uso"><span>Disco</span><span id="val-disk">--</span></div><div class="barra"><div id="bar-disk" class="relleno"></div></div>
+        </div>
+      </section>
+    </div>
+
+    <section class="panel">
+      <div class="panel-head"><h3>Promedios por minuto · última hora</h3></div>
+      <table>
+        <thead><tr><th>Hora</th><th>CPU prom.</th><th>CPU máx.</th><th>RAM prom.</th><th>RAM máx.</th><th>Disco prom.</th></tr></thead>
+        <tbody id="tabla-prom"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <!-- Chart.js 4.4.7 alojado en el propio proyecto (frontend/vendor): no depende de ninguna CDN -->
+  <script src="vendor/chart.umd.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

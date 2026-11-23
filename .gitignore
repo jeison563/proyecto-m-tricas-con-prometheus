@@ -1,0 +1,19 @@
+# Secretos: NUNCA al repositorio
+.env
+
+# Entornos y cachés de Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+
+# Editor / sistema
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Paquetes generados
+*.zip

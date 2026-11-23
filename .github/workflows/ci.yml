@@ -1,0 +1,76 @@
+# .github/workflows/ci.yml
+# Integración continua: se ejecuta en cada push y en cada pull request.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Pruebas
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt -r requirements-dev.txt
+
+      # test_rate_params.py se ignora porque metricas/metrica_entrada.py no existe en el proyecto.
+      # Cuando agregues ese archivo, quita la opción --ignore.
+      # Las pruebas con Gemini real (marcador "gemini") no se ejecutan: usan tu API key.
+      - name: Ejecutar pruebas
+        run: pytest -q --ignore=tests/test_rate_params.py
+
+  config:
+    name: Validar configuración
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prometheus (config y reglas de alerta)
+        run: |
+          docker run --rm --entrypoint promtool \
+            -v "$PWD/prometheus:/etc/prometheus:ro" \
+            prom/prometheus:v2.55.1 check config /etc/prometheus/prometheus.yml
+
+      - name: Alertmanager
+        run: |
+          docker run --rm --entrypoint amtool \
+            -v "$PWD/alertmanager:/etc/alertmanager:ro" \
+            prom/alertmanager:v0.27.0 check-config /etc/alertmanager/alertmanager.yml
+
+      - name: Nginx
+        run: |
+          docker run --rm --add-host api:127.0.0.1 \
+            -v "$PWD/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro" \
+            nginx:1.27-alpine nginx -t
+
+      - name: Docker Compose
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ci
+        run: |
+          touch .env        # el .env real no está en el repositorio
+          docker compose config -q
+
+  build:
+    name: Construir imagen
+    needs: [tests, config]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Construir (sin publicar)
+        run: docker build -t monitor-app:ci .

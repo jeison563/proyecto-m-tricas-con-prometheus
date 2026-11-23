@@ -1,0 +1,91 @@
+# .github/workflows/cd.yml
+# Entrega continua: tras un CI verde en main, publica la imagen en GitHub Container Registry
+# y despliega en tu servidor por SSH. También se puede lanzar a mano (Run workflow).
+name: CD
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publicar:
+    name: Publicar imagen
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    outputs:
+      imagen: ${{ steps.datos.outputs.imagen }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Calcular nombre de la imagen
+        id: datos
+        run: |
+          # GHCR exige minúsculas
+          echo "imagen=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+          echo "sha=${{ github.event.workflow_run.head_sha || github.sha }}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ steps.datos.outputs.imagen }}:${{ steps.datos.outputs.sha }}
+            ${{ steps.datos.outputs.imagen }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  desplegar:
+    name: Desplegar en el servidor
+    needs: publicar
+    runs-on: ubuntu-latest
+    environment: produccion          # en GitHub puedes exigir aprobación manual para este entorno
+    env:
+      IMAGEN: ${{ needs.publicar.outputs.imagen }}:${{ github.event.workflow_run.head_sha || github.sha }}
+      PUERTO: ${{ secrets.DEPLOY_PORT || '22' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Preparar SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          echo "${{ secrets.DEPLOY_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+
+      # La imagen solo contiene el código Python: el resto (compose, nginx, prometheus,
+      # alertmanager y frontend) se copia al servidor. El .env del servidor NO se toca.
+      - name: Copiar archivos de configuración
+        run: |
+          rsync -az -e "ssh -i ~/.ssh/deploy_key -p $PUERTO" \
+            docker-compose.yml nginx prometheus alertmanager frontend \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}/"
+
+      - name: Actualizar contenedores
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | ssh -i ~/.ssh/deploy_key -p "$PUERTO" \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "set -e; cd '${{ secrets.DEPLOY_PATH }}'
+             docker login ghcr.io -u '${{ github.actor }}' --password-stdin
+             export APP_IMAGE='$IMAGEN'
+             docker compose pull api worker
+             docker compose up -d
+             docker compose ps"
